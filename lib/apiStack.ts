@@ -1,32 +1,32 @@
-import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib'
-import { Table } from 'aws-cdk-lib/aws-dynamodb'
-import { Construct } from 'constructs'
-import * as path from 'path'
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Construct } from 'constructs';
+import * as path from 'path';
 import {
 	GraphqlApi,
-	Schema,
+	Definition,
 	AuthorizationType,
 	FieldLogLevel,
 	MappingTemplate,
-} from '@aws-cdk/aws-appsync-alpha'
-import { UserPool } from 'aws-cdk-lib/aws-cognito'
-import { IRole } from 'aws-cdk-lib/aws-iam'
+} from 'aws-cdk-lib/aws-appsync';
+import { UserPool } from 'aws-cdk-lib/aws-cognito';
+import { IRole } from 'aws-cdk-lib/aws-iam';
 
 interface APIStackProps extends StackProps {
-	userpool: UserPool
-	roomTable: Table
-	userTable: Table
-	messageTable: Table
-	unauthenticatedRole: IRole
+	userpool: UserPool;
+	roomTable: Table;
+	userTable: Table;
+	messageTable: Table;
+	unauthenticatedRole: IRole;
 }
 
 export class APIStack extends Stack {
 	constructor(scope: Construct, id: string, props: APIStackProps) {
-		super(scope, id, props)
+		super(scope, id, props);
 
 		const api = new GraphqlApi(this, 'ChatApp', {
 			name: 'ChatApp',
-			schema: Schema.fromAsset(path.join(__dirname, 'graphql/schema.graphql')),
+			definition: Definition.fromFile(path.join(__dirname, 'graphql/schema.graphql')),
 			authorizationConfig: {
 				defaultAuthorization: {
 					authorizationType: AuthorizationType.USER_POOL,
@@ -39,18 +39,18 @@ export class APIStack extends Stack {
 				fieldLogLevel: FieldLogLevel.ALL,
 			},
 			xrayEnabled: true,
-		})
+		});
 
 		const roomTableDataSource = api.addDynamoDbDataSource(
 			'RoomTableDataSource',
 			props.roomTable
-		)
+		);
 		const messageTableDataSource = api.addDynamoDbDataSource(
 			'MessageTableDataSource',
 			props.messageTable
-		)
+		);
 
-		roomTableDataSource.createResolver({
+		roomTableDataSource.createResolver('CreateRoomResolver', {
 			typeName: 'Mutation',
 			fieldName: 'createRoom',
 			requestMappingTemplate: MappingTemplate.fromFile(
@@ -60,9 +60,9 @@ export class APIStack extends Stack {
 				)
 			),
 			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-		})
+		});
 
-		roomTableDataSource.createResolver({
+		roomTableDataSource.createResolver('ListRoomsResolver', {
 			typeName: 'Query',
 			fieldName: 'listRooms',
 			// Can't use MappingTemplate.dynamoDbScanTable() because it's too basic for our needs👇🏽
@@ -73,9 +73,9 @@ export class APIStack extends Stack {
 			responseMappingTemplate: MappingTemplate.fromFile(
 				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.res.vtl')
 			),
-		})
+		});
 
-		messageTableDataSource.createResolver({
+		messageTableDataSource.createResolver('CreateMessageResolver', {
 			typeName: 'Mutation',
 			fieldName: 'createMessage',
 			requestMappingTemplate: MappingTemplate.fromFile(
@@ -85,8 +85,8 @@ export class APIStack extends Stack {
 				)
 			),
 			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-		})
-		messageTableDataSource.createResolver({
+		});
+		messageTableDataSource.createResolver('ListMessageForRoomResolver', {
 			typeName: 'Query',
 			fieldName: 'listMessagesForRoom',
 			requestMappingTemplate: MappingTemplate.fromFile(
@@ -101,9 +101,9 @@ export class APIStack extends Stack {
 					'graphql/mappingTemplates/Query.listMessagesForRoom.res.vtl'
 				)
 			),
-		})
+		});
 
-		messageTableDataSource.createResolver({
+		messageTableDataSource.createResolver('UpdateMessageResolver', {
 			typeName: 'Mutation',
 			fieldName: 'updateMessage',
 			requestMappingTemplate: MappingTemplate.fromFile(
@@ -113,14 +113,14 @@ export class APIStack extends Stack {
 				)
 			),
 			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-		})
+		});
 
 		new CfnOutput(this, 'GraphQLAPIURL', {
 			value: api.graphqlUrl,
-		})
+		});
 
 		new CfnOutput(this, 'GraphQLAPIID', {
 			value: api.apiId,
-		})
+		});
 	}
 }

@@ -22,6 +22,7 @@
 		"typescript": "~5.3.3"
 	},
 	"dependencies": {
+		"@aws-appsync/utils": "^1.6.0",
 		"@aws-cdk/aws-appsync-alpha": "^2.59.0-alpha.0",
 		"@aws-cdk/aws-cognito-identitypool-alpha": "^2.115.0-alpha.0",
 		"aws-cdk-lib": "2.115.0",

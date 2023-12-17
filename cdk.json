@@ -1,12 +1,16 @@
 {
 	"app": "npx ts-node --prefer-ts-exts bin/mainBackend.ts",
 	"watch": {
-		"include": ["**"],
+		"include": [
+			"**"
+		],
 		"exclude": [
 			"README.md",
 			"cdk*.json",
 			"**/*.d.ts",
-			"**/*.js",
+			"*.js",
+			"lib/*.js",
+			"bin/*.js",
 			"tsconfig.json",
 			"package*.json",
 			"yarn.lock",

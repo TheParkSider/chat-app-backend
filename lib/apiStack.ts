@@ -7,7 +7,9 @@ import {
 	Definition,
 	AuthorizationType,
 	FieldLogLevel,
-	MappingTemplate,
+	Resolver,
+	Code,
+	FunctionRuntime,
 } from 'aws-cdk-lib/aws-appsync';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { IRole } from 'aws-cdk-lib/aws-iam';
@@ -50,69 +52,59 @@ export class APIStack extends Stack {
 			props.messageTable
 		);
 
-		roomTableDataSource.createResolver('CreateRoomResolver', {
+		new Resolver(this, 'CreateRoomResolver', {
+			api: api,
+			dataSource: roomTableDataSource,
 			typeName: 'Mutation',
 			fieldName: 'createRoom',
-			requestMappingTemplate: MappingTemplate.fromFile(
-				path.join(
-					__dirname,
-					'graphql/mappingTemplates/Mutation.createRoom.req.vtl'
-				)
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Mutation.createRoom.js')
 			),
-			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+			runtime: FunctionRuntime.JS_1_0_0,
 		});
 
-		roomTableDataSource.createResolver('ListRoomsResolver', {
+		new Resolver(this, 'ListRoomsResolver', {
+			api: api,
+			dataSource: roomTableDataSource,
 			typeName: 'Query',
 			fieldName: 'listRooms',
-			// Can't use MappingTemplate.dynamoDbScanTable() because it's too basic for our needs👇🏽
-			// https://github.com/aws/aws-cdk/blob/5e4d48e2ff12a86c0fb0177fe7080990cf79dbd0/packages/%40aws-cdk/aws-appsync/lib/mapping-template.ts#L39. I should PR this to take in an optional limit and scan 🤔
-			requestMappingTemplate: MappingTemplate.fromFile(
-				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.req.vtl')
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Query.listRooms.js')
 			),
-			responseMappingTemplate: MappingTemplate.fromFile(
-				path.join(__dirname, 'graphql/mappingTemplates/Query.listRooms.res.vtl')
-			),
+			runtime: FunctionRuntime.JS_1_0_0,
 		});
 
-		messageTableDataSource.createResolver('CreateMessageResolver', {
+		new Resolver(this, 'CreateMessageResolver', {
+			api: api,
+			dataSource: messageTableDataSource,
 			typeName: 'Mutation',
 			fieldName: 'createMessage',
-			requestMappingTemplate: MappingTemplate.fromFile(
-				path.join(
-					__dirname,
-					'graphql/mappingTemplates/Mutation.createMessage.req.vtl'
-				)
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Mutation.createMessage.js')
 			),
-			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-		});
-		messageTableDataSource.createResolver('ListMessageForRoomResolver', {
-			typeName: 'Query',
-			fieldName: 'listMessagesForRoom',
-			requestMappingTemplate: MappingTemplate.fromFile(
-				path.join(
-					__dirname,
-					'graphql/mappingTemplates/Query.listMessagesForRoom.req.vtl'
-				)
-			),
-			responseMappingTemplate: MappingTemplate.fromFile(
-				path.join(
-					__dirname,
-					'graphql/mappingTemplates/Query.listMessagesForRoom.res.vtl'
-				)
-			),
+			runtime: FunctionRuntime.JS_1_0_0,
 		});
 
-		messageTableDataSource.createResolver('UpdateMessageResolver', {
+		new Resolver(this, 'ListMessageForRoomResolver', {
+			api: api,
+			dataSource: messageTableDataSource,
+			typeName: 'Query',
+			fieldName: 'listMessagesForRoom',
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Query.listMessagesForRoom.js')
+			),
+			runtime: FunctionRuntime.JS_1_0_0,
+		});
+
+		new Resolver(this, 'UpdateMessageResolver', {
+			api: api,
+			dataSource: messageTableDataSource,
 			typeName: 'Mutation',
 			fieldName: 'updateMessage',
-			requestMappingTemplate: MappingTemplate.fromFile(
-				path.join(
-					__dirname,
-					'graphql/mappingTemplates/Mutation.updateMessage.req.vtl'
-				)
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Mutation.updateMessage.js')
 			),
-			responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+			runtime: FunctionRuntime.JS_1_0_0,
 		});
 
 		new CfnOutput(this, 'GraphQLAPIURL', {

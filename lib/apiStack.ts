@@ -14,6 +14,12 @@ import {
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 
+import {
+	Function,
+	Runtime,
+	Code as LambdaCode
+} from 'aws-cdk-lib/aws-lambda'
+
 interface APIStackProps extends StackProps {
 	userpool: UserPool;
 	roomTable: Table;
@@ -43,6 +49,14 @@ export class APIStack extends Stack {
 			xrayEnabled: true,
 		});
 
+		const greeting = new Function(this, 'GreetingFunction', {
+			runtime: Runtime.PYTHON_3_11,
+			handler: 'greeting.handler',
+			code: LambdaCode.fromAsset(
+				path.join(__dirname, 'functions/greeting')
+			),
+		})
+
 		const roomTableDataSource = api.addDynamoDbDataSource(
 			'RoomTableDataSource',
 			props.roomTable
@@ -51,6 +65,10 @@ export class APIStack extends Stack {
 			'MessageTableDataSource',
 			props.messageTable
 		);
+		const greetingFunctionDataSource = api.addLambdaDataSource(
+			'GreetingFunctionDataSource',
+			greeting
+		)
 
 		new Resolver(this, 'CreateRoomResolver', {
 			api: api,

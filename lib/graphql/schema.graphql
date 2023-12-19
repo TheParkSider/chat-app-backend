@@ -4,6 +4,8 @@ type Query {
 		roomId: ID!
 		sortDirection: ModelSortDirection
 	): MessageConnection
+
+	getGreeting(name: Int): String
 }
 
 type Mutation {
@@ -75,3 +77,4 @@ enum ModelSortDirection {
 	ASC
 	DESC
 }
+

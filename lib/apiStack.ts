@@ -70,6 +70,17 @@ export class APIStack extends Stack {
 			greeting
 		)
 
+		new Resolver(this, 'GreetingResolver', {
+			api: api,
+			dataSource: greetingFunctionDataSource,
+			typeName: 'Query',
+			fieldName: 'getGreeting',
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Query.getGreeting.js')
+			),
+			runtime: FunctionRuntime.JS_1_0_0,
+		})
+
 		new Resolver(this, 'CreateRoomResolver', {
 			api: api,
 			dataSource: roomTableDataSource,

@@ -5,7 +5,7 @@ type Query {
 		sortDirection: ModelSortDirection
 	): MessageConnection
 
-	getGreeting(name: Int): String
+	getGreeting(name: String): String
 }
 
 type Mutation {

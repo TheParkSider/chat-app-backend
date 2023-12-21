@@ -20,6 +20,10 @@ import {
 	Code as LambdaCode
 } from 'aws-cdk-lib/aws-lambda'
 
+import {
+	PythonFunction
+} from '@aws-cdk/aws-lambda-python-alpha'
+
 interface APIStackProps extends StackProps {
 	userpool: UserPool;
 	roomTable: Table;
@@ -55,7 +59,14 @@ export class APIStack extends Stack {
 			code: LambdaCode.fromAsset(
 				path.join(__dirname, 'functions/greeting')
 			),
-		})
+		});
+
+		const packaging = new PythonFunction(this, 'PackagingFunction', {
+			entry: path.join(__dirname, 'functions/packaging'),
+			runtime: Runtime.PYTHON_3_11,
+			index: 'index.py',
+			handler: 'handler'
+		});
 
 		const roomTableDataSource = api.addDynamoDbDataSource(
 			'RoomTableDataSource',
@@ -68,7 +79,12 @@ export class APIStack extends Stack {
 		const greetingFunctionDataSource = api.addLambdaDataSource(
 			'GreetingFunctionDataSource',
 			greeting
-		)
+		);
+
+		const packagingFunctionDataSource = api.addLambdaDataSource(
+			'PackagingFunctionDataSource',
+			packaging
+		);
 
 		new Resolver(this, 'GreetingResolver', {
 			api: api,
@@ -80,6 +96,17 @@ export class APIStack extends Stack {
 			),
 			runtime: FunctionRuntime.JS_1_0_0,
 		})
+
+		new Resolver(this, 'PackagingResolver', {
+			api: api,
+			dataSource: packagingFunctionDataSource,
+			typeName: 'Query',
+			fieldName: 'testPackaging',
+			code: Code.fromAsset(
+				path.join(__dirname, 'graphql/resolvers/Query.testPackaging.js')
+			),
+			runtime: FunctionRuntime.JS_1_0_0,
+		});
 
 		new Resolver(this, 'CreateRoomResolver', {
 			api: api,

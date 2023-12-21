@@ -6,6 +6,7 @@ type Query {
 	): MessageConnection
 
 	getGreeting(name: String): String
+	testPackaging(name: String): String
 }
 
 type Mutation {
